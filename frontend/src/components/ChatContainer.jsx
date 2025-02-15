@@ -1,9 +1,10 @@
 import { useChatStore } from "../store/useChatStore";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
+import MessageDropdown from "./MessageDropdown"; // Import the DropdownMenu component
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
@@ -15,23 +16,49 @@ const ChatContainer = () => {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
+    markMessageAsRead,
+    deleteMessage,
+    editMessage, // Assuming you have an updateMessage function in your store
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState("");
 
   useEffect(() => {
+    markMessageAsRead(selectedUser._id);
     getMessages(selectedUser._id);
 
     subscribeToMessages();
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages, markMessageAsRead]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  const handleEdit = (messageId, text) => {
+    setEditingMessageId(messageId);
+    setEditingText(text);
+  };
+
+  const handleEditSubmit = (messageId) => {
+    editMessage(messageId, editingText);
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  const handleDelete = (messageId) => {
+    deleteMessage(messageId);
+  };
+
+  const handleShare = (messageId) => {
+    // Handle share message
+    console.log("Share message:", messageId);
+  };
 
   if (isMessagesLoading) {
     return (
@@ -54,7 +81,7 @@ const ChatContainer = () => {
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
-            <div className=" chat-image avatar">
+            <div className="chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
@@ -66,21 +93,57 @@ const ChatContainer = () => {
                 />
               </div>
             </div>
-            <div className="chat-header mb-1">
+            <div className="chat-header mb-1 flex justify-between items-center">
               <time className="text-xs opacity-50 ml-1">
                 {formatMessageTime(message.createdAt)}
               </time>
+              <MessageDropdown
+                onEdit={() => handleEdit(message._id, message.text)}
+                onDelete={() => handleDelete(message._id)}
+                onShare={() => handleShare(message._id)}
+              />
             </div>
             <div className="chat-bubble flex flex-col">
-              {message.image && (
-                <img
-                  src={message.image}
-                  alt="Attachment"
-                  className="sm:max-w-[200px] rounded-md mb-2"
-                />
+              {editingMessageId === message._id ? (
+                <div>
+                  <input
+                    type="text"
+                    value={editingText}
+                    onChange={(e) => setEditingText(e.target.value)}
+                    className="input input-bordered w-full mb-2"
+                  />
+                  <button
+                    onClick={() => handleEditSubmit(message._id)}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {message.image && (
+                    <img
+                      src={message.image}
+                      alt="Attachment"
+                      className="sm:max-w-[200px] rounded-md mb-2"
+                    />
+                  )}
+                  {message.text && <p>{message.text}</p>}
+                </>
               )}
-              {message.text && <p>{message.text}</p>}
             </div>
+            {message.isRead && (
+              <div className="chat-read flex items-center text-blue-600">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path d="M9 16.172l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l10-10a1 1 0 00-1.414-1.414L9 16.172z" />
+                </svg>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -89,4 +152,5 @@ const ChatContainer = () => {
     </div>
   );
 };
+
 export default ChatContainer;

@@ -9,6 +9,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  isMarkingAsRead:false,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -19,6 +20,14 @@ export const useChatStore = create((set, get) => ({
       toast.error(error.response.data.message);
     } finally {
       set({ isUsersLoading: false });
+    }
+  },
+
+  markMessageAsRead: async (userId) => {
+    try {
+      await axiosInstance.patch(`/messages/mark-read/${userId}`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to mark messages as read");
     }
   },
 
@@ -43,6 +52,32 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  deleteMessage: async (messageId) => {
+    const { messages } = get();
+    try {
+      await axiosInstance.delete(`/messages/${messageId}`);
+      set({
+        messages: messages.filter((message) => message._id !== messageId),
+      });
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
+  editMessage: async (messageId, text) => {
+    const { messages } = get();
+    try {
+      const res = await axiosInstance.patch(`/messages/edit/${messageId}`, { text });
+      set({
+        messages: messages.map((message) => (message._id === messageId ? res.data : message)),
+      });
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
+
+
   subscribeToMessages: () => {
     const { selectedUser } = get();
     if (!selectedUser) return;
@@ -57,6 +92,7 @@ export const useChatStore = create((set, get) => ({
         messages: [...get().messages, newMessage],
       });
     });
+
   },
 
   unsubscribeFromMessages: () => {

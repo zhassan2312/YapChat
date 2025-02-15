@@ -1,51 +1,74 @@
-import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
+import jwt from 'jsonwebtoken';
+import { generateAuthToken } from "../lib/utils.js";
+//import passport from "../lib/passport.js";
+
+export const verifyEmailController=async (req, res) => {
+  try {
+    const { token } = req.params;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    if (!decoded.email) {
+      return res.status(400).send("Invalid token");
+    }
+
+    // Find the user and set `isVerified` to true
+    const updatedUser = await User.findOneAndUpdate(
+      { email: decoded.email },
+      { isVerified: true },
+    );
+    if (!updatedUser) {
+      return res.status(404).send("User not found");
+    }
+
+    res.redirect(`${process.env.CLIENT_URL}/`);
+  } catch (error) {
+    console.error("Error verifying email:", error.message);
+    res.status(400).send("Invalid or expired token");
+  }
+}
+
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
   try {
-    if (!fullName || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+    const { fullName, email, password, verificationToken } = req.body;
+
+    // Ensure token is present
+    if (!verificationToken) {
+      return res.status(400).json({ message: "Verification token is missing" });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    // Decode token to validate email
+    const decodedToken = jwt.verify(verificationToken, process.env.JWT_SECRET);
+    if (!decodedToken || decodedToken.email !== email) {
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    const user = await User.findOne({ email });
-
-    if (user) return res.status(400).json({ message: "Email already exists" });
-
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create new user
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
+      isVerified: true, // Ensure user is marked as verified
     });
 
-    if (newUser) {
-      // generate jwt token here
-      generateToken(newUser._id, res);
-      await newUser.save();
+    await newUser.save(); // Save to DB
+    generateAuthToken(newUser._id, res);
 
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
-    }
+    res.status(201).json({ message: 'Account Created Successfully' });
   } catch (error) {
     console.log("Error in signup controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -53,15 +76,20 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if(!user.isVerified)
+    {
+      return res.status(400).json({ message: "Email not verified" });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Password is Incorrect" });
     }
 
-    generateToken(user._id, res);
+    generateAuthToken(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -110,6 +138,9 @@ export const updateProfile = async (req, res) => {
 
 export const checkAuth = (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     res.status(200).json(req.user);
   } catch (error) {
     console.log("Error in checkAuth controller", error.message);
