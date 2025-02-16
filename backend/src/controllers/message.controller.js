@@ -65,7 +65,44 @@ export const editMessage = async (req, res) => {
   }
 };
 
+export const unReadMessagesCount = async (req, res) => {
+  try {
+    const { id: userToChatId } = req.params;
+    const myId = req.user._id;
+    const count = await Message.countDocuments({
+      senderId: userToChatId,
+      receiverId: myId,
+      isRead: false,
+    });
 
+    res.status(200).json({ count });
+  } catch (error) {
+    console.log("Error in unReadMessagesCount controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getLastMessage = async (req, res) => {
+  try {
+    const { id: userToChatId } = req.params;
+    const myId = req.user._id;
+    const lastMessage = await Message.findOne({
+      $or: [
+        { senderId: myId, receiverId: userToChatId },
+        { senderId: userToChatId, receiverId: myId },
+      ],
+    }).sort({ createdAt: -1 });
+
+    if (!lastMessage) {
+      return res.status(404).json({ message: 'No messages found' });
+    }
+
+    res.status(200).json(lastMessage);
+  } catch (error) {
+    console.log("Error in getLastMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 
 export const getMessages = async (req, res) => {

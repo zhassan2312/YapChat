@@ -10,6 +10,9 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   isMarkingAsRead:false,
+  lastMessages: {},  // Store last message per user
+  unReadMessagesCounts: {}, // Store unread message count per user
+  lastMessageIsSentByMe: {},
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -17,7 +20,7 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get("/messages/users");
       set({ users: res.data });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message);
     } finally {
       set({ isUsersLoading: false });
     }
@@ -26,8 +29,44 @@ export const useChatStore = create((set, get) => ({
   markMessageAsRead: async (userId) => {
     try {
       await axiosInstance.patch(`/messages/mark-read/${userId}`);
+
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to mark messages as read");
+    }
+  },
+
+  getUnreadMessagesCount: async (userId) => {
+    try {
+      const res = await axiosInstance.get(`/messages/unread-count/${userId}`);
+    
+      set((state) => ({
+        unReadMessagesCounts: { ...state.unReadMessagesCounts, [userId]: res.data.count || 0 }
+      }));
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to get unread messages count");
+    }
+  },
+
+  getLastMessage: async (userId) => {
+    try {
+      const res = await axiosInstance.get(`/messages/last-message/${userId}`);
+      if(res.data.senderId === useAuthStore.getState().authUser._id){
+        set((state) => ({
+          lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: true }
+        }));
+      }else{
+        set((state) => ({
+          lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: false }
+        }));
+      }
+      set((state) => ({
+        lastMessages: { ...state.lastMessages, [userId]: res.data?.text || "No messages yet" }
+      }));
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to get last message");
+      set((state) => ({
+        lastMessages: { ...state.lastMessages, [userId]: "No messages yet" }
+      }));
     }
   },
 

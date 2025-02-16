@@ -1,9 +1,8 @@
 import { Users } from "lucide-react";
-
 const SidebarSkeleton = () => {
   // Create 8 skeleton items
   const skeletonContacts = Array(8).fill(null);
-
+  
   return (
     <aside
       className="h-full w-20 lg:w-72 border-r border-base-300 
@@ -29,9 +28,13 @@ const SidebarSkeleton = () => {
             {/* User info skeleton - only visible on larger screens */}
             <div className="hidden lg:block text-left min-w-0 flex-1">
               <div className="skeleton h-4 w-32 mb-2" />
-              <div className="lastMessage h-3 w-32 mb-2">
-                {/* Last message skeleton */}
+              <div className="skelton w-32 h-4 mb-2">
+                <div className="lastMessage h-3 w-32 mb-2">
+                  {/* Last message skeleton */}
+                </div>
+                <div className="unReadMessageCount h-3 w-16" />
               </div>
+              
               <div className="skeleton h-3 w-16" />
             </div>
           </div>

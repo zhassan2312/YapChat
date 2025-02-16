@@ -5,14 +5,32 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
-
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, getLastMessage, getUnreadMessagesCount, lastMessages, unReadMessagesCounts,lastMessageIsSentByMe } = useChatStore();
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
   useEffect(() => {
     getUsers();
   }, [getUsers]);
+
+  useEffect(() => {
+    const fetchUnreadMessagesCount = async () => {
+      for (const user of users) {
+        await getUnreadMessagesCount(user._id);
+      }
+    };
+
+    const fetchLastMessages = async () => {
+      for (const user of users) {
+        await getLastMessage(user._id);
+      }
+    };
+
+    if (users.length > 0) {
+      fetchUnreadMessagesCount();
+      fetchLastMessages();
+    }
+  }, [users, getUnreadMessagesCount, getLastMessage]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -69,9 +87,21 @@ const Sidebar = () => {
 
             {/* User info - only visible on larger screens */}
             <div className="hidden lg:block text-left min-w-0">
-              <div className="font-medium truncate">{user.fullName}</div>
-              <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+              <div className="truncate font-bold text-lg">{user.fullName}</div>
+              <div className="flex items-center gap-1">
+                <span className={`text-sm truncate ${ lastMessageIsSentByMe[user._id]? "" : "font-medium text-green-700"}`}>
+                  {lastMessageIsSentByMe[user._id] ? "You: " : ""}
+                  {lastMessages[user._id] === "No messages yet"
+                    ? lastMessages[user._id]
+                    : lastMessages[user._id]?.length > 20
+                    ? lastMessages[user._id].slice(0, 20) + "..."
+                    : lastMessages[user._id]}
+                </span>
+                {unReadMessagesCounts[user._id] > 0 && (
+                  <span className="text-xs text-white px-1 rounded-full bg-green-700">
+                    {unReadMessagesCounts[user._id]}
+                  </span>
+                )}
               </div>
             </div>
           </button>
@@ -84,4 +114,5 @@ const Sidebar = () => {
     </aside>
   );
 };
+
 export default Sidebar;
