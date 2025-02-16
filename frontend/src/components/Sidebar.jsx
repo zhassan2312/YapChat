@@ -22,6 +22,7 @@ const Sidebar = () => {
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   useEffect(() => {
     getUsers();
@@ -54,9 +55,15 @@ const Sidebar = () => {
     }
   };
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers = users.filter((user) => {
+    if (showOnlineOnly && !onlineUsers.includes(user._id)) {
+      return false;
+    }
+    if (showUnreadOnly && unReadMessagesCounts[user._id] === 0) {
+      return false;
+    }
+    return true;
+  });
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -78,6 +85,17 @@ const Sidebar = () => {
             <span className="text-sm">Show online only</span>
           </label>
           <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+        </div>
+        <div className="mt-3 hidden lg:flex items-center gap-2">
+          <label className="cursor-pointer flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showUnreadOnly}
+              onChange={(e) => setShowUnreadOnly(e.target.checked)}
+              className="checkbox checkbox-sm"
+            />
+            <span className="text-sm">Show unread only</span>
+          </label>
         </div>
       </div>
 
