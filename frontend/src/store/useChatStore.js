@@ -52,33 +52,35 @@ export const useChatStore = create((set, get) => ({
       }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to get unread messages count");
-    }
-  },
 
-  getLastMessage: async (userId) => {
-    try {
-      const res = await axiosInstance.get(`/messages/last-message/${userId}`);
-      if(res.data.senderId === useAuthStore.getState().authUser._id){
-        set((state) => ({
-          lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: true }
-        }));
-      }else{
-        set((state) => ({
-          lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: false }
-        }));
       }
-      set((state) => ({
-        lastMessages: { ...state.lastMessages, [userId]: res.data?.text || "No messages yet" }
-      }));
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to get last message");
-      set((state) => ({
-        lastMessages: { ...state.lastMessages, [userId]: "No messages yet" }
-      }));
-    }
-  },
+    },
+      getLastMessage: async (userId) => {
+        try {
+          const res = await axiosInstance.get(`/messages/last-message/${userId}`);
+          const lastMessageText = res.data.image ? 'Photo' : res.data.text;
+          console.log(res.data)
+          if(res.data.senderId === useAuthStore.getState().authUser._id){
+            set((state) => ({
+              lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: true }
+            }));
+          }else{
+            set((state) => ({
+              lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: false }
+            }));
+          }
+          set((state) => ({
+            lastMessages: { ...state.lastMessages, [userId]: lastMessageText || "No messages yet" }
+          }));
+        } catch (error) {
+          toast.error(error.response?.data?.message || "Failed to get last message");
+          set((state) => ({
+            lastMessages: { ...state.lastMessages, [userId]: "No messages yet" }
+          }));
+        }
+      },
 
-  getMessages: async (userId) => {
+      getMessages: async (userId) => {
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);

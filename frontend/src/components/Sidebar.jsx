@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users } from "lucide-react";
+import { Users,Image } from "lucide-react";
 
 const Sidebar = () => {
   const {
@@ -112,9 +112,12 @@ const Sidebar = () => {
             </div>
 
             <div className="hidden lg:block text-left min-w-0">
-              <div className="font-medium truncate">{user.fullName}</div>
-              <span className="text-sm truncate">
+              <div className="flex justify-between font-medium ">{user.fullName}</div>
+              <span className="flex gap-1 text-sm">
                 {lastMessageIsSentByMe[user._id] ? "You: " : ""}
+                {lastMessages[user._id] ==='Photo'&&
+                  <Image size={18} />
+                }
                 {lastMessages[user._id] || "No messages yet"}
               </span>
               {unReadMessagesCounts[user._id] > 0 && (
