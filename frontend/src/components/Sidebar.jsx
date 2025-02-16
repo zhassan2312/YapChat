@@ -5,32 +5,54 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading, getLastMessage, getUnreadMessagesCount, lastMessages, unReadMessagesCounts,lastMessageIsSentByMe } = useChatStore();
+  const {
+    subscribeToMessages,
+    getUsers,
+    users,
+    selectedUser,
+    setSelectedUser,
+    isUsersLoading,
+    lastMessages,
+    unReadMessagesCounts,
+    lastMessageIsSentByMe,
+    markMessageAsRead,
+    getLastMessage,
+    getUnreadMessagesCount,
+  } = useChatStore();
+
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    subscribeToMessages();
+  }, []);
 
   useEffect(() => {
-    const fetchUnreadMessagesCount = async () => {
-      for (const user of users) {
-        await getUnreadMessagesCount(user._id);
-      }
-    };
+    users.forEach((user) => {
+      getUnreadMessagesCount(user._id);
+      getLastMessage(user._id);
+    });
+  }, [users]);
 
-    const fetchLastMessages = async () => {
-      for (const user of users) {
-        await getLastMessage(user._id);
-      }
-    };
+  // **Refresh Messages in Real-time**
+  useEffect(() => {
+    const interval = setInterval(() => {
+      users.forEach((user) => {
+        getUnreadMessagesCount(user._id);
+        getLastMessage(user._id);
+      });
+    }, 5000); // Refresh every 5 seconds
 
-    if (users.length > 0) {
-      fetchUnreadMessagesCount();
-      fetchLastMessages();
+    return () => clearInterval(interval);
+  }, [users]);
+
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+    if (unReadMessagesCounts[user._id] > 0) {
+      markMessageAsRead(user._id);
     }
-  }, [users, getUnreadMessagesCount, getLastMessage]);
+  };
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -45,7 +67,6 @@ const Sidebar = () => {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
-        {/* TODO: Online filter toggle */}
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
@@ -64,52 +85,28 @@ const Sidebar = () => {
         {filteredUsers.map((user) => (
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
-            className={`
-              w-full p-3 flex items-center gap-3
-              hover:bg-base-300 transition-colors
-              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
-            `}
+            onClick={() => handleUserClick(user)}
+            className={`w-full p-3 flex items-center gap-3 hover:bg-base-300 transition-colors 
+              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}`}
           >
             <div className="relative mx-auto lg:mx-0">
-              <img
-                src={user.profilePic || "/avatar.png"}
-                alt={user.name}
-                className="size-12 object-cover rounded-full"
-              />
-              {onlineUsers.includes(user._id) && (
-                <span
-                  className="absolute bottom-0 right-0 size-3 bg-green-500 
-                  rounded-full ring-2 ring-zinc-900"
-                />
-              )}
+              <img src={user.profilePic || "/avatar.png"} alt={user.name} className="size-12 object-cover rounded-full" />
             </div>
 
-            {/* User info - only visible on larger screens */}
             <div className="hidden lg:block text-left min-w-0">
-              <div className="truncate font-bold text-lg">{user.fullName}</div>
-              <div className="flex items-center gap-1">
-                <span className={`text-sm truncate ${ lastMessageIsSentByMe[user._id]? "" : "font-medium text-green-700"}`}>
-                  {lastMessageIsSentByMe[user._id] ? "You: " : ""}
-                  {lastMessages[user._id] === "No messages yet"
-                    ? lastMessages[user._id]
-                    : lastMessages[user._id]?.length > 20
-                    ? lastMessages[user._id].slice(0, 20) + "..."
-                    : lastMessages[user._id]}
+              <div className="font-medium truncate">{user.fullName}</div>
+              <span className="text-sm truncate">
+                {lastMessageIsSentByMe[user._id] ? "You: " : ""}
+                {lastMessages[user._id] || "No messages yet"}
+              </span>
+              {unReadMessagesCounts[user._id] > 0 && (
+                <span className="text-xs text-white px-1 rounded-full bg-green-700">
+                  {unReadMessagesCounts[user._id]}
                 </span>
-                {unReadMessagesCounts[user._id] > 0 && (
-                  <span className="text-xs text-white px-1 rounded-full bg-green-700">
-                    {unReadMessagesCounts[user._id]}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </button>
         ))}
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
-        )}
       </div>
     </aside>
   );

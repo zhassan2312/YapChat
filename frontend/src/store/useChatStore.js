@@ -9,7 +9,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
-  isMarkingAsRead:false,
+  isMarkingAsRead: false,
   lastMessages: {},  // Store last message per user
   unReadMessagesCounts: {}, // Store unread message count per user
   lastMessageIsSentByMe: {},
@@ -30,6 +30,14 @@ export const useChatStore = create((set, get) => ({
     try {
       await axiosInstance.patch(`/messages/mark-read/${userId}`);
 
+      // Reset unread count for this user
+      set((state) => ({
+        unReadMessagesCounts: { ...state.unReadMessagesCounts, [userId]: 0 },
+      }));
+
+      // **Notify sender that message is read**
+      const socket = useAuthStore.getState().socket;
+      socket.emit("markAsRead", { senderId: userId, receiverId: useAuthStore.getState().authUser._id });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to mark messages as read");
     }
@@ -86,6 +94,23 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       set({ messages: [...messages, res.data] });
+
+      socket.on("newMessage", (newMessage) => {
+        const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+        if (!isMessageSentFromSelectedUser) return;
+
+        set({
+          messages: [...get().messages, newMessage],
+        });
+
+        set((state) => ({
+          lastMessages: { ...state.lastMessages, [selectedUser._id]: res.data.text },
+          unReadMessagesCounts: { ...state.unReadMessagesCounts, [selectedUser._id]: 0 },
+          lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [selectedUser._id]: true }
+        }));
+      });
+
+      
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -98,6 +123,8 @@ export const useChatStore = create((set, get) => ({
       set({
         messages: messages.filter((message) => message._id !== messageId),
       });
+
+
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -118,26 +145,55 @@ export const useChatStore = create((set, get) => ({
 
 
   subscribeToMessages: () => {
-    const { selectedUser } = get();
-    if (!selectedUser) return;
-
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
+      const { senderId, text } = newMessage;
+      const { selectedUser } = get();
 
-      set({
-        messages: [...get().messages, newMessage],
-      });
+      // If the selected user is the sender, mark message as read instantly
+      if (selectedUser?._id === senderId) {
+        get().markMessageAsRead(senderId);
+      }
+
+      set((state) => ({
+        messages: [...state.messages, newMessage],
+        lastMessages: { ...state.lastMessages, [senderId]: text },
+        lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [senderId]: false },
+        unReadMessagesCounts: {
+          ...state.unReadMessagesCounts,
+          [senderId]: (state.unReadMessagesCounts[senderId] || 0) + 1,
+        },
+      }));
     });
 
+    // **Handle "messageRead" event for sender**
+    socket.on("messageRead", ({ senderId }) => {
+      set((state) => ({
+        unReadMessagesCounts: { ...state.unReadMessagesCounts, [senderId]: 0 },
+      }));
+    });
+
+    // **Handle "messagesUpdated" to refresh UI for the receiver**
+    socket.on("messagesUpdated", () => {
+      set((state) => ({
+        messages: [...state.messages],
+      }));
+    });
   },
+  
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
   },
 
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => {
+    set({ selectedUser })
+    set((state) => ({
+      lastMessages: { ...state.lastMessages, [selectedUser._id]: newMessage.text },
+      unReadMessagesCounts: { ...state.unReadMessagesCounts, [selectedUser._id]: 0 },
+      lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [selectedUser._id]: true }
+    }));
+  },
 }));

@@ -128,22 +128,34 @@ const ChatContainer = () => {
                       className="sm:max-w-[200px] rounded-md mb-2"
                     />
                   )}
-                  {message.text && <p>{message.text}</p>}
+                  <div className="flex items-center">
+                    {message.senderId !== authUser._id ? (
+                      <>
+                        {message.text && <p>{message.text}</p>}
+                        {message.isRead && (
+                          <div className={`chat-read flex items-center text-blue-600 ml-2`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                              <path d="M21.3 6.3l-9.8 9.8-5.6-5.6-1.4 1.4 7 7 11.2-11.2zM21.3 12.3l-9.8 9.8-5.6-5.6-1.4 1.4 7 7 11.2-11.2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {message.isRead && (
+                          <div className={`chat-read flex items-center text-blue-600 mr-2`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                              <path d="M21.3 6.3l-9.8 9.8-5.6-5.6-1.4 1.4 7 7 11.2-11.2zM21.3 12.3l-9.8 9.8-5.6-5.6-1.4 1.4 7 7 11.2-11.2z" />
+                            </svg>
+                          </div>
+                        )}
+                        {message.text && <p>{message.text}</p>}
+                      </>
+                    )}
+                  </div>
                 </>
               )}
             </div>
-            {message.isRead && (
-              <div className="chat-read flex items-center text-blue-600">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-4 h-4"
-                >
-                  <path d="M9 16.172l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l10-10a1 1 0 00-1.414-1.414L9 16.172z" />
-                </svg>
-              </div>
-            )}
           </div>
         ))}
       </div>
