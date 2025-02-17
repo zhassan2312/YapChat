@@ -59,7 +59,6 @@ export const useChatStore = create((set, get) => ({
         try {
           const res = await axiosInstance.get(`/messages/last-message/${userId}`);
           const lastMessageText = res.data.image ? 'Photo' : res.data.text;
-          console.log(res.data)
           if(res.data.senderId === useAuthStore.getState().authUser._id){
             set((state) => ({
               lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [userId]: true }
@@ -193,9 +192,7 @@ export const useChatStore = create((set, get) => ({
   setSelectedUser: (selectedUser) => {
     set({ selectedUser })
     set((state) => ({
-      lastMessages: { ...state.lastMessages, [selectedUser._id]: newMessage.text },
-      unReadMessagesCounts: { ...state.unReadMessagesCounts, [selectedUser._id]: 0 },
-      lastMessageIsSentByMe: { ...state.lastMessageIsSentByMe, [selectedUser._id]: true }
+      unReadMessagesCounts: { ...state.unReadMessagesCounts, [selectedUser._id]: 0 }
     }));
   },
 }));
