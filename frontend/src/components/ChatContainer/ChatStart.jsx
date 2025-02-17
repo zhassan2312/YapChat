@@ -1,7 +1,8 @@
 import MessageDropdown from "./MessageDropdown"; // Import the DropdownMenu component
 import React from "react"; // Import the React library
 
-const ChatStart = ({message, authUser, selectedUser, editingMessageId, editingText, handleEdit, handleEditSubmit, handleDelete, handleShare}) => {
+const ChatStart = ({message, authUser, selectedUser, editingMessageId, editingText, handleEdit, handleEditSubmit, handleDelete, handleShare,handleDownload}) => {
+    const hasImage = message.image;
     return (
       <div className="flex flex-row items-end gap-4">
         <div className="chat-image avatar">
@@ -73,7 +74,9 @@ const ChatStart = ({message, authUser, selectedUser, editingMessageId, editingTe
           onEdit={() => handleEdit(message._id, message.text)}
           onDelete={() => handleDelete(message._id)}
           onShare={() => handleShare(message._id)}
+          onDownload={() => handleDownload(message._id)}
           align="left"
+          hasImage={hasImage}
         />
       </div>
     );

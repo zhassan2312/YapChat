@@ -1,4 +1,4 @@
-import { useChatStore } from "../store/useChatStore";
+import { useChatStore } from "../../store/useChatStore";
 import { useEffect, useRef, useState } from "react";
 
 import ChatHeader from "../ChatHeader";
@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { formatMessageTime } from "../../lib/utils";
 import ChatStart from "./ChatStart";
 import ChatEnd from "./ChatEnd";
+
 
 const ChatContainer = () => {
   const {
@@ -19,7 +20,8 @@ const ChatContainer = () => {
     unsubscribeFromMessages,
     markMessageAsRead,
     deleteMessage,
-    editMessage, // Assuming you have an updateMessage function in your store
+    editMessage,
+    downloadImage // Assuming you have an updateMessage function in your store
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
@@ -44,6 +46,10 @@ const ChatContainer = () => {
   const handleEdit = (messageId, text) => {
     setEditingMessageId(messageId);
     setEditingText(text);
+  };
+
+  const handleDownload = (senderId) => {
+    downloadImage(senderId);
   };
 
   const handleEditSubmit = (messageId) => {
@@ -99,6 +105,7 @@ const ChatContainer = () => {
                     handleEditSubmit={handleEditSubmit} 
                     handleDelete={handleDelete} 
                     handleShare={handleShare} 
+                    handleDownload={handleDownload}
                   />
                 : <ChatStart 
                     message={message} 
@@ -110,6 +117,7 @@ const ChatContainer = () => {
                     handleEditSubmit={handleEditSubmit} 
                     handleDelete={handleDelete} 
                     handleShare={handleShare} 
+                    handleDownload={handleDownload}
                   />}
             </div>
           </div>

@@ -13,6 +13,7 @@ export const useChatStore = create((set, get) => ({
   lastMessages: {},  // Store last message per user
   unReadMessagesCounts: {}, // Store unread message count per user
   lastMessageIsSentByMe: {},
+  isLoadingImage: false,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -195,4 +196,27 @@ export const useChatStore = create((set, get) => ({
       unReadMessagesCounts: { ...state.unReadMessagesCounts, [selectedUser._id]: 0 }
     }));
   },
+
+  downloadImage: async (senderId) => {
+    set({ isLoadingImage: true });
+    try {
+      const res = await axiosInstance.get(`/messages/download-image/${senderId}`, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "image.png");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      toast.error(error.response.data.message);
+    } finally {
+      set({ isLoadingImage: false });
+    }
+  },
+
+
 }));

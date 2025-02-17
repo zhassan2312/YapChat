@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 
-const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
+const MessageDropdown = ({ onEdit, onDelete, onShare, onDownload, align, hasImage }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isHoveringEdit, setIsHoveringEdit] = useState(false);
   const [isHoveringDelete, setIsHoveringDelete] = useState(false);
   const [isHoveringShare, setIsHoveringShare] = useState(false);
+  const [isHoveringDownload, setIsHoveringDownload] = useState(false);
 
   const dropdownRef = useRef(null);
   const dropdownItemRef = useRef(null);
@@ -17,6 +18,7 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
   };
 
   useEffect(() => {
+    if(dropdownRef.current) {
     if (isHovering) {
       gsap.to(dropdownRef.current, {
         opacity: 1,
@@ -26,9 +28,11 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
         opacity: 0,
       });
     }
+  }
   }, [isHovering]);
 
   useEffect(() => {
+    if(dropdownItemRef.current) {
     if (isOpen) {
       gsap.to(dropdownItemRef.current, {
         opacity: 1
@@ -39,9 +43,8 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
         y: 0
       });
     }
+  }
   }, [isOpen]);
-
-
 
   return (
     <div className="dropdown relative inline-block text-left z-10">
@@ -56,7 +59,7 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
+          className="h-4 w-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -101,7 +104,7 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
           </li>
           <li>
             <motion.button
-              className={`block px-4 py-2 text-sm w-full text-left ${isHoveringShare ? 'bg-base-200' : 'bg-base-300'} rounded-b-lg`}
+              className={`block px-4 py-2 text-sm w-full text-left ${isHoveringShare ? 'bg-base-200' : 'bg-base-300'} ${hasImage ? '' : 'rounded-b-lg'}`}
               role="menuitem"
               onClick={onShare}
               onMouseEnter={() => setIsHoveringShare(true)}
@@ -111,6 +114,20 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, align }) => {
               Share
             </motion.button>
           </li>
+          {hasImage && (
+            <li>
+              <motion.button
+                className={`block px-4 py-2 text-sm w-full text-left ${isHoveringDownload ? 'bg-base-200' : 'bg-base-300'} rounded-b-lg`}
+                role="menuitem"
+                onClick={onDownload}
+                onMouseEnter={() => setIsHoveringDownload(true)}
+                onMouseLeave={() => setIsHoveringDownload(false)}
+                whileHover={{ scale: 1.05 }}
+              >
+                Download
+              </motion.button>
+            </li>
+          )}
         </ul>
       )}
     </div>

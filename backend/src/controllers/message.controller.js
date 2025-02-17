@@ -160,3 +160,18 @@ export const deleteMessage = async (req, res) => {
   }
 };
 
+
+export const downloadImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await Message.findById(id);
+    if (!message || !message.image) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+    console.log(message.image);
+    res.status(200).json({ imageUrl: message.image });
+  }
+  catch (err) {
+    res.status(500).json({ message: `Server Error${err}` });
+  }
+};
