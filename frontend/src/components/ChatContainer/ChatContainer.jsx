@@ -21,7 +21,8 @@ const ChatContainer = () => {
     markMessageAsRead,
     deleteMessage,
     editMessage,
-    downloadImage // Assuming you have an updateMessage function in your store
+    downloadImage,
+    triggerIsTyping // Assuming you have an updateMessage function in your store
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
@@ -70,9 +71,9 @@ const ChatContainer = () => {
   if (isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
-        <ChatHeader />
+        <ChatHeader  />
         <MessageSkeleton />
-        <MessageInput />
+        <MessageInput triggerIsTyping={triggerIsTyping}/>
       </div>
     );
   }
@@ -124,7 +125,7 @@ const ChatContainer = () => {
         ))}
       </div>
 
-      <MessageInput />
+      <MessageInput triggerIsTyping={triggerIsTyping}/>
     </div>
   );
 };

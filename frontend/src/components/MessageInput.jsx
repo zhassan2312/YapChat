@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -7,7 +7,12 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { triggerIsTyping, sendMessage } = useChatStore();
+
+  const handleInputChange = (e) => {
+    setText(e.target.value);
+    triggerIsTyping(); // Notify the receiver
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -76,7 +81,7 @@ const MessageInput = () => {
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => handleInputChange(e)}
           />
           <input
             type="file"
