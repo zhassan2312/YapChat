@@ -4,17 +4,19 @@ import { useChatStore } from "../store/useChatStore";
 import { X } from "lucide-react";
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser,subscribeToTyping,unsubscribeFromTyping,isTyping } = useChatStore();
+  const { selectedUser, setSelectedUser, subscribeToTyping, unsubscribeFromTyping, isTyping } = useChatStore();
   const { onlineUsers } = useAuthStore();
-  
+  const typingTimeout = useRef(null);
+
   useEffect(() => {
     if (selectedUser) {
       subscribeToTyping();
     }
     return () => {
       unsubscribeFromTyping();
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
     };
-  }, [selectedUser]);
+  }, [selectedUser, subscribeToTyping, unsubscribeFromTyping]);
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -30,12 +32,8 @@ const ChatHeader = () => {
             <p className="text-sm text-base-content/70">
               {isTyping ? "Typing..." : onlineUsers.includes(selectedUser?._id) ? "Online" : "Offline"}
             </p>
-
           </div>
         </div>
-        <button onClick={() => setSelectedUser(null)}>
-          <X />
-        </button>
       </div>
     </div>
   );

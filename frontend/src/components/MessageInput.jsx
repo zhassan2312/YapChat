@@ -8,13 +8,19 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { triggerIsTyping, sendMessage } = useChatStore();
+  const { triggerIsTyping, sendMessage,triggerStoppedTyping } = useChatStore();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleInputChange = (e) => {
     setText(e.target.value);
-    triggerIsTyping(); // Notify the receiver
+    
+    if (e.target.value.trim() === "") {
+      triggerStoppedTyping();  // ✅ Stops typing when input is empty
+    } else {
+      triggerIsTyping();
+    }
   };
+  
 
   const handleEmojiClick = (emojiObject) => {
     setText((prevMessage) => prevMessage + emojiObject.emoji);
@@ -53,6 +59,7 @@ const MessageInput = () => {
       setText("");
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      triggerStoppedTyping();
     } catch (error) {
       console.error("Failed to send message:", error);
     }

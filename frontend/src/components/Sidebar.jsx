@@ -18,6 +18,7 @@ const Sidebar = () => {
     markMessageAsRead,
     getLastMessage,
     getUnreadMessagesCount,
+    isTyping
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
@@ -112,19 +113,25 @@ const Sidebar = () => {
             </div>
 
             <div className="hidden lg:block text-left min-w-0">
-              <div className="flex justify-between font-medium ">{user.fullName}</div>
-              <span className="flex gap-1 text-sm">
-                {lastMessageIsSentByMe[user._id] ? "You: " : ""}
-                {lastMessages[user._id] ==='Photo'&&
-                  <Image size={18} />
-                }
-                {lastMessages[user._id] || "No messages yet"}
-              </span>
-              {unReadMessagesCounts[user._id] > 0 && (
-                <span className="text-xs text-white px-1 rounded-full bg-green-700">
-                  {unReadMessagesCounts[user._id]}
+              <div className="flex flex-row justify-between font-medium ">{user.fullName}</div>
+                <span className={`flex gap-1 text-sm ${isTyping ||(!lastMessageIsSentByMe[user._id]&&unReadMessagesCounts[user._id]>0) ? "text-bold text-emerald-500" : "text-base-content/70"}`}>
+                  {isTyping ? "Typing..." : (
+                    <>
+                      {lastMessageIsSentByMe[user._id] ? "You: " : ""}
+                      {lastMessages[user._id] === 'Photo' ? (
+                        <Image size={18} />
+                      ) : (
+                        lastMessages[user._id] || "No messages yet"
+                      )}
+                    </>
+                  )}
+                  
                 </span>
-              )}
+                {unReadMessagesCounts[user._id] > 0 && (
+                  <span className="text-xs text-white px-1 rounded-full bg-emerald-500">
+                    {unReadMessagesCounts[user._id]}
+                  </span>
+                )}
             </div>
           </button>
         ))}

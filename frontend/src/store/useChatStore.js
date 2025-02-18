@@ -211,7 +211,7 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  triggerIsTyping: debounce(() => {
+  triggerIsTyping:() => {
     const socket = useAuthStore.getState().socket;
     const { selectedUser } = get();
     if (!selectedUser) return;
@@ -220,7 +220,18 @@ export const useChatStore = create((set, get) => ({
       senderId: useAuthStore.getState().authUser?._id,
       receiverId: selectedUser._id,
     });
-  }, 500),
+  },
+
+  triggerStoppedTyping: () => {
+    const socket = useAuthStore.getState().socket;
+    const { selectedUser } = get();
+    if (!selectedUser) return;
+  
+    socket.emit("stoppedTyping", {
+      senderId: useAuthStore.getState().authUser?._id,
+      receiverId: selectedUser._id,
+    });
+  },
   
   
 
@@ -232,20 +243,28 @@ export const useChatStore = create((set, get) => ({
   
       if (selectedUser?._id === senderId) {
         set({ isTyping: true });
+      }
+    });
   
-        setTimeout(() => {
-          set({ isTyping: false });
-        }, 3000);
+    socket.on("stoppedTyping", ({ senderId }) => {
+      const { selectedUser } = get();
+      
+      if (selectedUser?._id === senderId) {
+        set({ isTyping: false });
       }
     });
   },
+  
   
   
 
   unsubscribeFromTyping: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("typing");
+    socket.off("stoppedTyping");  // ✅ Correctly removes stoppedTyping listener
+  
     set({ isTyping: false });
   },
+  
   
 }));

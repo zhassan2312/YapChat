@@ -38,11 +38,16 @@ io.on("connection", (socket) => {
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("typing", { senderId });
   
-      setTimeout(() => {
-        io.to(receiverSocketId).emit("typing", { senderId: null });
-      }, 3000);
     }
   });
+
+  socket.on('stoppedTyping', ({ senderId, receiverId }) => {
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('stoppedTyping', { senderId });
+    }
+  });
+  
   
   
 
