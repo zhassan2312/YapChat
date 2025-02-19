@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 
-const MessageDropdown = ({ onEdit, onDelete, onShare, onDownload, align, hasImage }) => {
+const MessageDropdown = ({ onEdit, onDelete, onForward, onDownload, align, hasImage }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isHoveringEdit, setIsHoveringEdit] = useState(false);
   const [isHoveringDelete, setIsHoveringDelete] = useState(false);
-  const [isHoveringShare, setIsHoveringShare] = useState(false);
+  const [isHoveringForward, setIsHoveringForward] = useState(false);
   const [isHoveringDownload, setIsHoveringDownload] = useState(false);
 
   const dropdownRef = useRef(null);
@@ -104,14 +104,14 @@ const MessageDropdown = ({ onEdit, onDelete, onShare, onDownload, align, hasImag
           </li>
           <li>
             <motion.button
-              className={`block px-4 py-2 text-sm w-full text-left ${isHoveringShare ? 'bg-base-200' : 'bg-base-300'} ${hasImage ? '' : 'rounded-b-lg'}`}
+              className={`block px-4 py-2 text-sm w-full text-left ${isHoveringForward ? 'bg-base-200' : 'bg-base-300'} ${hasImage ? '' : 'rounded-b-lg'}`}
               role="menuitem"
-              onClick={onShare}
-              onMouseEnter={() => setIsHoveringShare(true)}
-              onMouseLeave={() => setIsHoveringShare(false)}
+              onClick={onForward}
+              onMouseEnter={() => setIsHoveringForward(true)}
+              onMouseLeave={() => setIsHoveringForward(false)}
               whileHover={{ scale: 1.05 }}
             >
-              Share
+              Forward
             </motion.button>
           </li>
           {hasImage && (

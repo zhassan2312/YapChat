@@ -175,3 +175,27 @@ export const downloadImage = async (req, res) => {
     res.status(500).json({ message: `Server Error${err}` });
   }
 };
+
+export const forwardMessage = async (req, res) => {
+  try {
+    const { id:receiverId } = req.params;
+    const { text,image } = req.body;
+    const newMessage = new Message({
+      senderId: req.user._id,
+      receiverId,
+      text: text,
+      image: image,
+      forwarded:true
+    });
+
+    await newMessage.save();
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receiveMessage", newMessage);
+    }
+    res.status(201).json(newMessage);
+  }
+  catch (err) {
+    res.status(500).json({ message: `Server Error${err}` });
+  }
+};

@@ -8,7 +8,8 @@ import {
     editMessage,
     unReadMessagesCount,
     getLastMessage,
-    downloadImage
+    downloadImage,
+    forwardMessage
 } from '../controllers/message.controller.js';
 import {protectRoute} from '../middleware/auth.middleware.js';
 const router=express.Router();
@@ -22,5 +23,5 @@ router.get('/download-image/:id',protectRoute,downloadImage);
 router.patch('/edit/:id',protectRoute,editMessage);
 router.get('/unread-count/:id',protectRoute,unReadMessagesCount);
 router.get('/last-message/:id',protectRoute,getLastMessage);
-
+router.post('/forward-message/:id',protectRoute,forwardMessage);
 export default router;

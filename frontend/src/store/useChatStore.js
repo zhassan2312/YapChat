@@ -16,6 +16,7 @@ export const useChatStore = create((set, get) => ({
   lastMessageIsSentByMe: {},
   isLoadingImage: false,
   isTyping: false,
+  forwardMessage: null,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -211,6 +212,7 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+
   triggerIsTyping:() => {
     const socket = useAuthStore.getState().socket;
     const { selectedUser } = get();
@@ -266,5 +268,25 @@ export const useChatStore = create((set, get) => ({
     set({ isTyping: false });
   },
   
+  forwardMessage: async (receiverId, message) => {
+    if (!receiverId) return;
+
+    try {
+      const res = await axiosInstance.post(`/messages/forward-message/${receiverId}`, message);
+      if (res.status === 200 || res.status === 201) {
+        set((state) => ({
+          messages: [...state.messages, res.data],
+        }));
+
+        const socket = useAuthStore.getState().socket;
+        socket.emit("newMessage", res.data);
+      } else {
+        throw new Error("Failed to forward message");
+      }
+    } catch (error) {
+      console.error("Error forwarding message:", error);
+      toast.error(error.response?.data?.message || "Failed to forward message");
+    }
+  },
   
 }));

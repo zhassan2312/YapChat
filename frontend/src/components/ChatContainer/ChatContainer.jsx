@@ -8,7 +8,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { formatMessageTime } from "../../lib/utils";
 import ChatStart from "./ChatStart";
 import ChatEnd from "./ChatEnd";
-
+import MiniSidebar from "./MiniSidebar";
 
 const ChatContainer = () => {
   const {
@@ -22,21 +22,28 @@ const ChatContainer = () => {
     deleteMessage,
     editMessage,
     downloadImage,
-    triggerIsTyping // Assuming you have an updateMessage function in your store
+    triggerIsTyping, // Assuming you have an updateMessage function in your store
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText, setEditingText] = useState("");
+  const [isForwarding, setIsForwarding] = useState(false);
+  const [messageToForward, setMessageToForward] = useState(null); // State to store the message to be forwarded
 
   useEffect(() => {
-    markMessageAsRead(selectedUser._id);
-    getMessages(selectedUser._id);
+    if (selectedUser) {
+      markMessageAsRead(selectedUser._id);
+      getMessages(selectedUser._id);
+      subscribeToMessages();
+    }
 
-    subscribeToMessages();
-
-    return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages, markMessageAsRead]);
+    return () => {
+      if (selectedUser) {
+        unsubscribeFromMessages();
+      }
+    };
+  }, [selectedUser, getMessages, subscribeToMessages, unsubscribeFromMessages, markMessageAsRead]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -53,6 +60,11 @@ const ChatContainer = () => {
     downloadImage(senderId);
   };
 
+  const handleForward = (message) => {
+    setMessageToForward({text:message.text,image:message.image}); // Set the message to be forwarded
+    setIsForwarding(true); // Open the MiniSidebar
+  };
+
   const handleEditSubmit = (messageId) => {
     editMessage(messageId, editingText);
     setEditingMessageId(null);
@@ -63,17 +75,17 @@ const ChatContainer = () => {
     deleteMessage(messageId);
   };
 
-  const handleShare = (messageId) => {
-    // Handle share message
-    console.log("Share message:", messageId);
+  const closeMiniSidebar = () => {
+    setIsForwarding(false); // Close the MiniSidebar
+    setMessageToForward(null); // Clear the message to be forwarded
   };
 
   if (isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
-        <ChatHeader  />
+        <ChatHeader />
         <MessageSkeleton />
-        <MessageInput triggerIsTyping={triggerIsTyping}/>
+        <MessageInput triggerIsTyping={triggerIsTyping} />
       </div>
     );
   }
@@ -105,7 +117,7 @@ const ChatContainer = () => {
                     handleEdit={handleEdit} 
                     handleEditSubmit={handleEditSubmit} 
                     handleDelete={handleDelete} 
-                    handleShare={handleShare} 
+                    handleForward={handleForward} 
                     handleDownload={handleDownload}
                   />
                 : <ChatStart 
@@ -117,7 +129,7 @@ const ChatContainer = () => {
                     handleEdit={handleEdit} 
                     handleEditSubmit={handleEditSubmit} 
                     handleDelete={handleDelete} 
-                    handleShare={handleShare} 
+                    handleForward={handleForward} 
                     handleDownload={handleDownload}
                   />}
             </div>
@@ -125,10 +137,16 @@ const ChatContainer = () => {
         ))}
       </div>
 
-      <MessageInput triggerIsTyping={triggerIsTyping}/>
+      <MessageInput triggerIsTyping={triggerIsTyping} />
+      {isForwarding && (
+        <MiniSidebar
+          isOpen={isForwarding}
+          onClose={closeMiniSidebar}
+          message={messageToForward}
+        />
+      )}
     </div>
   );
 };
-
 
 export default ChatContainer;
