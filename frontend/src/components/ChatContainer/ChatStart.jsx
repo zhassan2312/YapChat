@@ -1,7 +1,19 @@
 import MessageDropdown from "./MessageDropdown"; // Import the DropdownMenu component
 import React from "react"; // Import the React library
 
-const ChatStart = ({message, authUser, selectedUser, editingMessageId, editingText, handleEdit, handleEditSubmit, handleDelete, handleForward,handleDownload}) => {
+const ChatStart = ({
+  message, 
+  authUser, 
+  selectedUser, 
+  editingMessageId, 
+  editingText, 
+  handleEdit, 
+  handleEditSubmit, 
+  handleDelete, 
+  handleForward,
+  handleDownload,
+  isSearched
+}) => {
     const hasImage = message.image;
     return (
       <div className="flex flex-row items-end gap-4">
@@ -45,7 +57,7 @@ const ChatStart = ({message, authUser, selectedUser, editingMessageId, editingTe
               <div className="flex items-center">
                 {message.senderId !== authUser._id ? (
                   <>
-                    {message.text && <p>{message.text}</p>}
+                    {message.text && <p className={`${isSearched?'bg-secondary':''}`}>{message.text}</p>}
                     {message.isRead && (
                       <div className={`chat-read flex items-center text-blue-600 ml-2`}>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">

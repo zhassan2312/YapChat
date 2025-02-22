@@ -199,3 +199,25 @@ export const forwardMessage = async (req, res) => {
     res.status(500).json({ message: `Server Error${err}` });
   }
 };
+
+
+export const searchMessageWithinChat = async (req, res) => {
+  try {
+    const { id: userToChatId } = req.params;
+    const { searchQuery } = req.body;
+    const myId = req.user._id;
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: myId, receiverId: userToChatId },
+        { senderId: userToChatId, receiverId: myId },
+      ],
+      text: { $regex: searchQuery, $options: "i" },
+    });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.log("Error in searchMessageWithinChat controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

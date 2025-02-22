@@ -1,7 +1,19 @@
-import MessageDropdown from "./MessageDropdown"; // Import the DropdownMenu component
-import React from "react"; // Import the React library
+import MessageDropdown from "./MessageDropdown";
+import React from "react";
 
-const ChatEnd = ({ message, authUser, selectedUser, editingMessageId, editingText, handleEdit, handleEditSubmit, handleDelete, handleForward, handleDownload }) => {
+const ChatEnd = ({ 
+  message, 
+  authUser, 
+  selectedUser, 
+  editingMessageId, 
+  editingText, 
+  handleEdit, 
+  handleEditSubmit, 
+  handleDelete, 
+  handleForward, 
+  handleDownload,
+  isSearched 
+}) => {
   const hasImage = message.image;
   return (
     <div className="flex flex-row items-end gap-4">
@@ -13,7 +25,7 @@ const ChatEnd = ({ message, authUser, selectedUser, editingMessageId, editingTex
         hasImage={hasImage}
         align="right"
       />
-      <div className="chat-bubble flex flex-col">
+      <div className={`chat-bubble flex flex-col `}>
         {message.forwarded && (
           <div className="flex items-center text-gray-500 mb-1">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1">
@@ -67,7 +79,7 @@ const ChatEnd = ({ message, authUser, selectedUser, editingMessageId, editingTex
                       </svg>
                     </div>
                   )}
-                  {message.text && <p>{message.text}</p>}
+                  {message.text && <p className={`${isSearched ? 'bg-secondary' : ''}`}>{message.text}</p>}
                 </>
               )}
             </div>
@@ -90,4 +102,4 @@ const ChatEnd = ({ message, authUser, selectedUser, editingMessageId, editingTex
   );
 };
 
-export default ChatEnd; // Export the ChatEnd component
+export default ChatEnd;

@@ -2,7 +2,6 @@ import { create } from "zustand";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
-import { debounce } from "lodash";
 
 export const useChatStore = create((set, get) => ({
   messages: [],
@@ -288,5 +287,19 @@ export const useChatStore = create((set, get) => ({
       toast.error(error.response?.data?.message || "Failed to forward message");
     }
   },
+
+  searchMessageWithinChat:async (userId, searchQuery) => {
+    if (!userId || !searchQuery) return;
+  
+    try {
+      const res = await axiosInstance.post(`/messages/search-message/${userId}`, { searchQuery });
+      set({ searchMessages: res.data });
+      return res.data;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to search message");
+    }
+  },
   
 }));
+
+

@@ -9,7 +9,8 @@ import {
     unReadMessagesCount,
     getLastMessage,
     downloadImage,
-    forwardMessage
+    forwardMessage,
+    searchMessageWithinChat
 } from '../controllers/message.controller.js';
 import {protectRoute} from '../middleware/auth.middleware.js';
 const router=express.Router();
@@ -24,4 +25,5 @@ router.patch('/edit/:id',protectRoute,editMessage);
 router.get('/unread-count/:id',protectRoute,unReadMessagesCount);
 router.get('/last-message/:id',protectRoute,getLastMessage);
 router.post('/forward-message/:id',protectRoute,forwardMessage);
+router.post('/search-message/:id',protectRoute,searchMessageWithinChat);
 export default router;
