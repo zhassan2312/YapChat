@@ -47,7 +47,8 @@ io.on("connection", (socket) => {
       io.to(receiverSocketId).emit('stoppedTyping', { senderId });
     }
   });
-  
+
+
   
 
   socket.on("disconnect", () => {

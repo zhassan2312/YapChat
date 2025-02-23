@@ -293,10 +293,20 @@ export const useChatStore = create((set, get) => ({
   
     try {
       const res = await axiosInstance.post(`/messages/search-message/${userId}`, { searchQuery });
-      set({ searchMessages: res.data });
       return res.data;
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to search message");
+    }
+  },
+
+  sidebarSearch: async (searchQuery) => {
+    if (!searchQuery) return;
+  
+    try {
+      const res = await axiosInstance.post(`/messages/search/`, { searchQuery });
+      return res;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to search");
     }
   },
   

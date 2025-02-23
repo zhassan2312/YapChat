@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users,Image } from "lucide-react";
+import { Users, Image } from "lucide-react";
+import SidebarSearch from "./Search/SidebarSearch";
 
 const Sidebar = () => {
   const {
@@ -18,12 +19,15 @@ const Sidebar = () => {
     markMessageAsRead,
     getLastMessage,
     getUnreadMessagesCount,
-    isTyping
+    isTyping,
+    sidebarSearch,
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState(users);
 
   useEffect(() => {
     getUsers();
@@ -37,7 +41,6 @@ const Sidebar = () => {
     });
   }, [users]);
 
-  // **Refresh Messages in Real-time**
   useEffect(() => {
     const interval = setInterval(() => {
       users.forEach((user) => {
@@ -49,6 +52,14 @@ const Sidebar = () => {
     return () => clearInterval(interval);
   }, [users]);
 
+  useEffect(() => {
+    if (searchQuery) {
+      sidebarSearch(searchQuery);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchQuery, users]);
+
   const handleUserClick = (user) => {
     setSelectedUser(user);
     if (unReadMessagesCounts[user._id] > 0) {
@@ -56,7 +67,7 @@ const Sidebar = () => {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsersList = filteredUsers.filter((user) => {
     if (showOnlineOnly && !onlineUsers.includes(user._id)) {
       return false;
     }
@@ -70,38 +81,18 @@ const Sidebar = () => {
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
-      <div className="border-b border-base-300 w-full p-5">
-        <div className="flex items-center gap-2">
-          <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
-        </div>
-        <div className="mt-3 hidden lg:flex items-center gap-2">
-          <label className="cursor-pointer flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showOnlineOnly}
-              onChange={(e) => setShowOnlineOnly(e.target.checked)}
-              className="checkbox checkbox-sm"
-            />
-            <span className="text-sm">Show online only</span>
-          </label>
-          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
-        </div>
-        <div className="mt-3 hidden lg:flex items-center gap-2">
-          <label className="cursor-pointer flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showUnreadOnly}
-              onChange={(e) => setShowUnreadOnly(e.target.checked)}
-              className="checkbox checkbox-sm"
-            />
-            <span className="text-sm">Show unread only</span>
-          </label>
-        </div>
-      </div>
+      <SidebarSearch
+        showOnlineOnly={showOnlineOnly}
+        setShowOnlineOnly={setShowOnlineOnly}
+        showUnreadOnly={showUnreadOnly}
+        setShowUnreadOnly={setShowUnreadOnly}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onlineUsers={onlineUsers}
+      />
 
       <div className="overflow-y-auto w-full py-3">
-        {filteredUsers.map((user) => (
+        {filteredUsersList.map((user) => (
           <button
             key={user._id}
             onClick={() => handleUserClick(user)}

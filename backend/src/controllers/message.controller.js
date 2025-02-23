@@ -221,3 +221,17 @@ export const searchMessageWithinChat = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+export const sidebarSearch = async (req, res) => {
+  try {
+    const { searchQuery } = req.body;
+
+    const users=await User.find({name: { $regex: searchQuery, $options: "i" }});
+
+    res.status(200).json(users);
+  }
+  catch (err) {
+    res.status(500).json({ message: `Server Error${err}` });
+  }
+};
