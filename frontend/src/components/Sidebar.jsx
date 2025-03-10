@@ -21,6 +21,7 @@ const Sidebar = () => {
     getUnreadMessagesCount,
     isTyping,
     sidebarSearch,
+    unsubscribeFromMessages,
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();

@@ -1,54 +1,52 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
-
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+
+const handleError = (res, error, message = "Internal server error") => {
+  console.error(message, error.message);
+  res.status(500).json({ error: message });
+};
 
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
     const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
-
     res.status(200).json(filteredUsers);
   } catch (error) {
-    console.error("Error in getUsersForSidebar: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    handleError(res, error, "Error in getUsersForSidebar");
   }
 };
 
 export const markMessageAsRead = async (req, res) => {
   try {
     const { id: userToChatId } = req.params;
+    const myId = req.user._id;
 
-      const myId = req.user._id;
+    await Message.updateMany(
+      { senderId: userToChatId, receiverId: myId },
+      { $set: { isRead: true } }
+    );
 
-      await Message.updateMany(
-        { senderId: userToChatId, receiverId: myId },
-        { $set: { isRead: true } }
-      );
-
-    res.status(200).json({ message: 'Messages marked as read{userToChatId}' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(200).json({ message: `Messages marked as read for user ${userToChatId}` });
+  } catch (error) {
+    handleError(res, error, "Error in markMessageAsRead");
   }
 };
-
-
 
 export const editMessage = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
-    const message = await Message
-      .findById(id);
+    const message = await Message.findById(id);
     if (!message) {
       return res.status(404).json({ message: 'Message not found' });
     }
     message.text = text;
     await message.save();
     res.status(200).json(message);
-  } catch (err) {
-    res.status(500).json({ message: `Server Error${err}` });
+  } catch (error) {
+    handleError(res, error, "Error in editMessage");
   }
 };
 
@@ -64,8 +62,7 @@ export const unReadMessagesCount = async (req, res) => {
 
     res.status(200).json({ count });
   } catch (error) {
-    console.log("Error in unReadMessagesCount controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    handleError(res, error, "Error in unReadMessagesCount");
   }
 };
 
@@ -86,29 +83,26 @@ export const getLastMessage = async (req, res) => {
 
     res.status(200).json(lastMessage);
   } catch (error) {
-    console.log("Error in getLastMessage controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    handleError(res, error, "Error in getLastMessage");
   }
 };
 
-
 export const getMessages = async (req, res) => {
-    try {
-      const { id: userToChatId } = req.params;
-      const myId = req.user._id;
-      const messages = await Message.find({
-        $or: [
-          { senderId: myId, receiverId: userToChatId },
-          { senderId: userToChatId, receiverId: myId },
-        ],
-      });
-  
-      res.status(200).json(messages);
-    } catch (error) {
-      console.log("Error in getMessages controller: ", error.message);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  };
+  try {
+    const { id: userToChatId } = req.params;
+    const myId = req.user._id;
+    const messages = await Message.find({
+      $or: [
+        { senderId: myId, receiverId: userToChatId },
+        { senderId: userToChatId, receiverId: myId },
+      ],
+    });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    handleError(res, error, "Error in getMessages");
+  }
+};
 
 export const sendMessage = async (req, res) => {
   try {
@@ -118,7 +112,6 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
     }
@@ -139,11 +132,9 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.log("Error in sendMessage controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    handleError(res, error, "Error in sendMessage");
   }
 };
-
 
 export const deleteMessage = async (req, res) => {
   try {
@@ -154,12 +145,10 @@ export const deleteMessage = async (req, res) => {
     }
     await Message.findByIdAndDelete(id);
     res.status(200).json({ message: 'Message deleted successfully' });
-    
-  } catch (err) {
-    res.status(500).json({ message: `Server Error${err}` });
+  } catch (error) {
+    handleError(res, error, "Error in deleteMessage");
   }
 };
-
 
 export const downloadImage = async (req, res) => {
   try {
@@ -168,24 +157,22 @@ export const downloadImage = async (req, res) => {
     if (!message || !message.image) {
       return res.status(404).json({ message: 'Image not found' });
     }
-    console.log(message.image);
     res.status(200).json({ imageUrl: message.image });
-  }
-  catch (err) {
-    res.status(500).json({ message: `Server Error${err}` });
+  } catch (error) {
+    handleError(res, error, "Error in downloadImage");
   }
 };
 
 export const forwardMessage = async (req, res) => {
   try {
-    const { id:receiverId } = req.params;
-    const { text,image } = req.body;
+    const { id: receiverId } = req.params;
+    const { text, image } = req.body;
     const newMessage = new Message({
       senderId: req.user._id,
       receiverId,
-      text: text,
-      image: image,
-      forwarded:true
+      text,
+      image,
+      forwarded: true,
     });
 
     await newMessage.save();
@@ -194,12 +181,10 @@ export const forwardMessage = async (req, res) => {
       io.to(receiverSocketId).emit("receiveMessage", newMessage);
     }
     res.status(201).json(newMessage);
-  }
-  catch (err) {
-    res.status(500).json({ message: `Server Error${err}` });
+  } catch (error) {
+    handleError(res, error, "Error in forwardMessage");
   }
 };
-
 
 export const searchMessageWithinChat = async (req, res) => {
   try {
@@ -217,21 +202,16 @@ export const searchMessageWithinChat = async (req, res) => {
 
     res.status(200).json(messages);
   } catch (error) {
-    console.log("Error in searchMessageWithinChat controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    handleError(res, error, "Error in searchMessageWithinChat");
   }
 };
-
 
 export const sidebarSearch = async (req, res) => {
   try {
     const { searchQuery } = req.body;
-
-    const users=await User.find({name: { $regex: searchQuery, $options: "i" }});
-
+    const users = await User.find({ name: { $regex: searchQuery, $options: "i" } });
     res.status(200).json(users);
-  }
-  catch (err) {
-    res.status(500).json({ message: `Server Error${err}` });
+  } catch (error) {
+    handleError(res, error, "Error in sidebarSearch");
   }
 };
