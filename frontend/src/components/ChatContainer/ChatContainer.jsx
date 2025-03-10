@@ -7,6 +7,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import ChatStart from "./ChatStart";
 import ChatEnd from "./ChatEnd";
 import MiniSidebar from "./MiniSidebar";
+import { formatMessageTime } from "../../lib/utils";
 
 const ChatContainer = () => {
   const {
@@ -86,7 +87,7 @@ const ChatContainer = () => {
     if (messageEndRef.current && messages) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages, selectedUser]);
 
   const handleEdit = (messageId, text) => {
     setEditingMessageId(messageId);
@@ -185,6 +186,7 @@ const ChatContainer = () => {
             </div>
           </div>
         ))}
+        <div ref={messageEndRef} />
       </div>
 
       <MessageInput triggerIsTyping={triggerIsTyping} />
