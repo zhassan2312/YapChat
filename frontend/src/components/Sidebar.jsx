@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
@@ -32,14 +32,18 @@ const Sidebar = () => {
   useEffect(() => {
     getUsers();
     subscribeToMessages();
-  }, []);
+    return () => {
+      // Clean up subscriptions
+      unsubscribeFromMessages();
+    };
+  }, [getUsers, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
     users.forEach((user) => {
       getUnreadMessagesCount(user._id);
       getLastMessage(user._id);
     });
-  }, [users]);
+  }, [users, getUnreadMessagesCount, getLastMessage]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,7 +54,7 @@ const Sidebar = () => {
     }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(interval);
-  }, [users]);
+  }, [users, getUnreadMessagesCount, getLastMessage]);
 
   useEffect(() => {
     if (searchQuery) {
@@ -58,7 +62,7 @@ const Sidebar = () => {
     } else {
       setFilteredUsers(users);
     }
-  }, [searchQuery, users]);
+  }, [searchQuery, users, sidebarSearch]);
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
@@ -67,15 +71,17 @@ const Sidebar = () => {
     }
   };
 
-  const filteredUsersList = filteredUsers.filter((user) => {
-    if (showOnlineOnly && !onlineUsers.includes(user._id)) {
-      return false;
-    }
-    if (showUnreadOnly && unReadMessagesCounts[user._id] === 0) {
-      return false;
-    }
-    return true;
-  });
+  const filteredUsersList = useMemo(() => {
+    return filteredUsers.filter((user) => {
+      if (showOnlineOnly && !onlineUsers.includes(user._id)) {
+        return false;
+      }
+      if (showUnreadOnly && unReadMessagesCounts[user._id] === 0) {
+        return false;
+      }
+      return true;
+    });
+  }, [filteredUsers, showOnlineOnly, showUnreadOnly, onlineUsers, unReadMessagesCounts]);
 
   if (isUsersLoading) return <SidebarSkeleton />;
 

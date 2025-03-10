@@ -33,6 +33,8 @@ export const protectRoute = async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
   auth: {
@@ -40,6 +42,7 @@ const transporter = nodemailer.createTransport({
       pass: process.env.EMAIL_PASS,
   },
 });
+
 export const verifyEmail = async (req, res,next) => {
   const { fullName, email, password } = req.body;
   try{

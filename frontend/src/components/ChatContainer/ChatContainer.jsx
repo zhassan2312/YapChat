@@ -1,11 +1,9 @@
 import { useChatStore } from "../../store/useChatStore";
 import { useEffect, useRef, useState } from "react";
-
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "../skeletons/MessageSkeleton";
 import { useAuthStore } from "../../store/useAuthStore";
-import { formatMessageTime } from "../../lib/utils";
 import ChatStart from "./ChatStart";
 import ChatEnd from "./ChatEnd";
 import MiniSidebar from "./MiniSidebar";
@@ -38,7 +36,7 @@ const ChatContainer = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async () => {
-    const result=await searchMessageWithinChat(selectedUser._id, searchText);
+    const result = await searchMessageWithinChat(selectedUser._id, searchText);
     setHighlightedMessages(result.map(msg => msg._id));
     setNoOfSearchResults(result.length);
     setCurrentSearchIndex(0);
@@ -47,7 +45,6 @@ const ChatContainer = () => {
   const scrollIntoViewMessage = (index) => {
     if (highlightedMessages.length > 0) {
       const messageId = highlightedMessages[index];
-      console.log(highlightedMessages);
       const messageElement = document.getElementById(messageId);
       if (messageElement) {
         messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -110,8 +107,6 @@ const ChatContainer = () => {
     setEditingMessageId(null);
     setEditingText("");
   };
-
-  
 
   const handleDelete = (messageId) => {
     deleteMessage(messageId);
@@ -196,7 +191,7 @@ const ChatContainer = () => {
       {isForwarding && (
         <MiniSidebar
           isOpen={isForwarding}
-          onClose={() => setIsForwarding(false)}
+          onClose={closeMiniSidebar}
           message={messageToForward}
         />
       )}

@@ -15,6 +15,7 @@ export const generateAuthToken = (userId, res) => {
   return token;
 };
 
+
 export const generateVerificationToken = (email) => {
   return jwt.sign({ email }, process.env.JWT_SECRET, {
     expiresIn: '1d',

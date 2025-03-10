@@ -18,32 +18,20 @@ const MessageDropdown = ({ onEdit, onDelete, onForward, onDownload, align, hasIm
   };
 
   useEffect(() => {
-    if(dropdownRef.current) {
-    if (isHovering) {
+    if (dropdownRef.current) {
       gsap.to(dropdownRef.current, {
-        opacity: 1,
-      });
-    } else {
-      gsap.to(dropdownRef.current, {
-        opacity: 0,
+        opacity: isHovering ? 1 : 0,
       });
     }
-  }
   }, [isHovering]);
 
   useEffect(() => {
-    if(dropdownItemRef.current) {
-    if (isOpen) {
+    if (dropdownItemRef.current) {
       gsap.to(dropdownItemRef.current, {
-        opacity: 1
-      });
-    } else {
-      gsap.to(dropdownItemRef.current, {
-        opacity: 0,
-        y: 0
+        opacity: isOpen ? 1 : 0,
+        y: isOpen ? 0 : -10,
       });
     }
-  }
   }, [isOpen]);
 
   return (
@@ -72,7 +60,7 @@ const MessageDropdown = ({ onEdit, onDelete, onForward, onDownload, align, hasIm
           />
         </svg>
       </div>
-        {isOpen && (
+      {isOpen && (
         <ul
           tabIndex={0}
           className={`dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow origin-top-${align} absolute ${align}-0 mt-2`}

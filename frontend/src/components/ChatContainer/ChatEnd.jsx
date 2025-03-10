@@ -1,5 +1,5 @@
-import MessageDropdown from "./MessageDropdown";
 import React from "react";
+import MessageDropdown from "./MessageDropdown";
 
 const ChatEnd = ({ 
   message, 
