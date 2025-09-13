@@ -59,7 +59,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
 
   await transporter.sendMail({
     to: email,
-    subject: 'Muslim Center - Verify Your Email',
+    subject: 'YapChat - Verify Your Email',
     html: EmailHTML(url),
   });
 

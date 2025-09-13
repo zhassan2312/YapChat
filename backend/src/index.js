@@ -5,35 +5,37 @@ import cookieParser from 'cookie-parser';
 import { connectDB } from './lib/db.js';
 import authRoutes from './routes/auth.route.js';
 import messageRoutes from './routes/message.route.js';
-import { app,server } from './lib/socket.js';
-import path from 'path';
-dotenv.config(); // Ensure this is called before using any environment variables
+import { app, server } from './lib/socket.js';
 
+dotenv.config();
 
-const __dirname = path.resolve();
-app.use(express.json()); // Increase payload size limit
+// Connect to database immediately for Vercel
+connectDB();
+
+app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.NODE_ENV === "production" 
-        ? "https://yapchat.onrender.com" 
-        : "http://localhost:5173",
+        ? process.env.CLIENT_URL || "https://your-vercel-app.vercel.app"
+        : "http://localhost:5175",
     credentials: true,
 }));
-
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-if(process.env.NODE_ENV === 'production'){
-    app.use(express.static(path.join(__dirname, '../frontend/dist')));
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Server is running' });
+});
+
+// Export for Vercel serverless deployment
+export default app;
+
+// For local development only
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5001;
+    server.listen(PORT, () => {
+        console.log('Server is running on PORT ' + PORT);
     });
 }
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-    console.log('Server is running on PORT ' + PORT);
-    connectDB();
-});

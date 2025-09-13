@@ -1,14 +1,25 @@
 {
-  "name": "chatapp",
+  "name": "yapchat",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Real-time chat application",
+  "main": "api/index.js",
   "scripts": {
-    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "install-deps": "cd backend && npm install && cd ../frontend && npm install"
   },
-  "keywords": [],
+  "keywords": [
+    "chat",
+    "realtime",
+    "socket.io",
+    "express",
+    "react"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "module",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }
